@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Office Location Data Collection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a5276;
+      --primary-light: #2980b9;
+      --accent: #e67e22;
+      --accent-light: #f39c12;
+      --success: #27ae60;
+      --error: #e74c3c;
+      --bg: #f0f4f8;
+      --card: #ffffff;
+      --text: #1a252f;
+      --text-muted: #5d6d7e;
+      --border: #d5dce4;
+      --shadow: 0 4px 20px rgba(26,82,118,0.10);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Outfit', 'Noto Sans Malayalam', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, #154360 100%);
+      padding: 20px 16px 60px; text-align: center; position: relative; overflow: hidden;
+    }
+    .header::before { content: ''; position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.05); }
+    .header::after { content: ''; position: absolute; bottom: -40px; left: -40px; width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,0.04); }
+    .header-logo { font-size: 32px; margin-bottom: 8px; }
+    .header h1 { color: #fff; font-size: 18px; font-weight: 700; letter-spacing: 0.3px; line-height: 1.3; }
+    .header p { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 4px; }
+
+    .container { max-width: 600px; margin: -36px auto 32px; padding: 0 14px; position: relative; z-index: 2; }
+
+    .tabs { display: flex; background: var(--card); border-radius: var(--radius); padding: 5px; box-shadow: var(--shadow); margin-bottom: 16px; }
+    .tab-btn { flex: 1; padding: 10px 6px; border: none; background: transparent; border-radius: var(--radius-sm); font-family: inherit; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.25s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .tab-btn.active { background: var(--primary); color: #fff; box-shadow: 0 3px 10px rgba(26,82,118,0.3); }
+    .tab-btn span { font-size: 14px; }
+
+    .card { background: var(--card); border-radius: var(--radius); padding: 20px 16px; box-shadow: var(--shadow); margin-bottom: 16px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .card-title .icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--primary-light)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .required::after { content: ' *'; color: var(--error); }
+    input, select { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; color: var(--text); background: #f8fafc; transition: all 0.2s; appearance: none; -webkit-appearance: none; }
+    input:focus, select:focus { outline: none; border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 4px rgba(41,128,185,0.12); }
+    input[readonly] { background: #e8f4f8; color: var(--primary); font-weight: 600; }
+
+    .location-box { background: linear-gradient(135deg, #e8f4f8, #d6eaf8); border: 2px dashed var(--primary-light); border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+    .location-status { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+    .location-status.success { color: var(--success); font-weight: 600; }
+    .location-status.error { color: var(--error); }
+    .location-coords { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; text-align: left; }
+
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-location { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; box-shadow: 0 4px 12px rgba(26,82,118,0.3); margin-bottom: 10px; }
+    .btn-location:active { transform: scale(0.98); }
+    .btn-map { background: linear-gradient(135deg, #27ae60, #2ecc71); color: #fff; box-shadow: 0 4px 12px rgba(39,174,96,0.3); margin-bottom: 14px; }
+    .btn-submit { background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: #fff; box-shadow: 0 4px 16px rgba(230,126,34,0.35); padding: 16px; font-size: 16px; border-radius: 12px; }
+    .btn-submit:active { transform: scale(0.98); }
+
+    .office-select-wrapper { position: relative; }
+    .office-select-wrapper::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--primary); pointer-events: none; font-size: 16px; }
+    select { padding-right: 36px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .info-badge { background: linear-gradient(135deg, #eaf4fb, #d6eaf8); border-left: 3px solid var(--primary-light); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--primary); margin-bottom: 14px; display: flex; align-items: flex-start; gap: 8px; }
+
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text); color: #fff; padding: 12px 24px; border-radius: 100px; font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 999; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+
+    .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(26,82,118,0.85); z-index: 500; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+    .loading-overlay.show { display: flex; }
+    .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #fff; font-size: 14px; font-weight: 600; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .pulsing { animation: pulse 1.2s ease-in-out infinite; }
+
+    .divider { height: 1px; background: linear-gradient(to right, transparent, var(--border), transparent); margin: 16px 0; }
+    .footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🏢</div>
+  <h1>Office Location Data Collection</h1>
+  <p>ഓഫീസ് ലൊക്കേഷൻ ഡാറ്റ സംഗ്രഹം</p>
+</div>
+
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('update')" id="tab-update">
+      <span>📍</span> Location Update
+    </button>
+    <button class="tab-btn" onclick="switchTab('new')" id="tab-new">
+      <span>➕</span> New Office
+    </button>
+  </div>
+
+  <!-- TAB 1: Update Existing Office Location -->
+  <div class="tab-panel active" id="panel-update">
+    <div class="info-badge">ℹ️ നിലവിലുള്ള ഓഫീസിന്റെ GPS കോർഡിനേറ്റ് ചേർക്കാൻ ഈ ഫോം ഉപയോഗിക്കുക.</div>
+
+    <form id="updateForm">
+      <div class="card">
+        <div class="card-title"><div class="icon">🏛️</div>ഓഫീസ് തിരഞ്ഞെടുക്കുക</div>
+        <div class="form-group">
+          <label class="required">Office Name</label>
+          <div class="office-select-wrapper">
+            <select id="officeName" required>
+              <option value="">-- ഓഫീസ് തിരഞ്ഞെടുക്കുക --</option>
+              <optgroup label="RO KKD">
+                <option>Regional Office Kozhikode</option>
+              </optgroup>
+              <optgroup label="SID REIC">
+                <option>SID REIC- SAT, GMC Hospital Trivandrum</option>
+                <option>SID REIC -Govt TDMC Alappuzha</option>
+                <option>SID REIC-ICH GMC Kottayam</option>
+                <option>SID REIC- G M C Hospital Thrissur</option>
+                <option>SID REIC- IMCH GMC Kozhikode</option>
+              </optgroup>
+              <optgroup label="SID DCO">
+                <option>SID DCO KSSM HO PoojappuraTvpm</option>
+                <option>SID DCO DEIC Govt.Victoria Hospital Kollam</option>
+                <option>SID DCO DEIC Building Alpy</option>
+                <option>SID DCO KTM REIC</option>
+                <option>SID DCO Old Nedumkandam Taluk Office Idki</option>
+                <option>SID DCO DSJO Civil Station Kakkanad</option>
+                <option>SID DCO DEIC Dist. Hospital Wadakanchery</option>
+                <option>SID DCO DSJO PKD</option>
+                <option>SID DCO DEIC Govt. THQH Thirurangadi</option>
+                <option>SID DCO KSSM Regional Office KKD</option>
+                <option>SID DCO Vayomithram Office Kalpetta</option>
+                <option>SID DCO MCRC Mattanoor DEIC Mangattuparamba</option>
+                <option>SID DCO Vayomithram Office KSGD Municipality</option>
+              </optgroup>
+              <optgroup label="SID ATC">
+                <option>SID ATC SAT GMC Hospital Trivandrum</option>
+                <option>SID ATC Govt TDMC Alappuzha</option>
+                <option>SID ATC ICH GMC Kottayam</option>
+                <option>SID ATC GMC Hospital Thrissur</option>
+                <option>SID ATC IMCH GMC Kozhikode</option>
+                <option>SID ATC IMHANS Kozhikode</option>
+                <option>SID ATC GMC Manjeri</option>
+              </optgroup>
+              <optgroup label="SID SAP">
+                <option>SID SAP Kozhikode Rural ICDS</option>
+                <option>SID SAP Urban 4 ICDS</option>
+                <option>SID SAP Thuneri ICDS</option>
+                <option>SID SAP Balussery ICDS</option>
+                <option>SID SAP Urban 2 ICDS</option>
+                <option>SID SAP Kunnummal ICDS</option>
+                <option>SID SAP Urban 3 Kozhikode</option>
+                <option>SID SAP Balussery Additional ICDS</option>
+                <option>SID SAP Koduvally ICDS</option>
+                <option>SID SAP Perambra ICDS</option>
+                <option>SID SAP Koduvally Additional ICDS</option>
+                <option>SID SAP Kunnamangalam ICDS</option>
+                <option>SID SAP Thodannur ICDS</option>
+                <option>SID SAP Chelannur ICDS</option>
+                <option>SID SAP Vadkara ICDS</option>
+                <option>SID SAP Melady ICDS</option>
+                <option>SID SAP Urban 1 ICDS</option>
+                <option>SID SAP Panthalyani Additional ICDS</option>
+              </optgroup>
+              <optgroup label="SID OAE">
+                <option>SID OAE GOVT. THQH KUNNAMKULAM TSR</option>
+                <option>SID OAE DH THODUPUZHA IDUKKI</option>
+                <option>SID OAE D H PAINAV IDUKKI</option>
+                <option>SID OAE D H KOZHENCHERRY PTA</option>
+                <option>SID OAE KMMSGG HOSPITAL PALA KOTTAYAM</option>
+                <option>SID OAE GENERAL HOSPITAL NEYYATTINKARA</option>
+                <option>SID OAE GOVT. MCH THRISSUR</option>
+                <option>SID OAE T.H.Q.H. KODUNGALLUR TSR</option>
+                <option>SID OAE D H NEDUMANGADU</option>
+                <option>SID OAE GMCH MANJERI MALAPPURAM</option>
+                <option>SID OAE GH PATHANAMTHITTA</option>
+                <option>SID OAE THQH CHALAKUDY THRISSUR</option>
+                <option>SID OAE GENARAL HOSPITAL KOTTAYAM</option>
+                <option>SID OAE GOVT. THQH MALAPPURAM</option>
+                <option>SID OAE GOVT. THQH HARIPAD ALPY</option>
+                <option>SID OAE D.H. NILAMBUR MALAPPURAM</option>
+                <option>SID OAE DISTRICT HOSPITAL KANJANGAD KSGD</option>
+                <option>SID OAE THQH MANNARKKAD PLKD</option>
+                <option>SID OAE W&amp;C KOZHIKODE</option>
+                <option>SID OAE THQH ADIMALI IDUKKI</option>
+                <option>SID OAE DH WADAKKANCHERY TSR</option>
+                <option>SID OAE THQH CHIRAYINKEEZHU</option>
+                <option>SID OAE IMCH KOZHIKODE</option>
+                <option>SID OAE SAT HOSPITAL MC TVM</option>
+                <option>SID OAE GH KOZHIKODE</option>
+                <option>SID OAE W&amp;C HOSPITAL THYCAUD TVM</option>
+                <option>SID OAE THALUK HOSPITAL THAMARASSERY KKD</option>
+                <option>SID OAE GH WAYANAD</option>
+                <option>SID OAE DH MANANTHAVADY WAYANAD</option>
+                <option>SID OAE D H ALUAVA</option>
+                <option>SID OAE GOVT. TD MEDICAL COLLEGE ALPY</option>
+                <option>SID OAE GOVT. W&amp;C HOSPITAL PLK</option>
+                <option>SID OAE W&amp;C HOSPITAL ALAPPUZHA</option>
+                <option>SID OAE THQH KOTTARAKKARA KOLLAM</option>
+                <option>SID OAE CHC MEENANGADI WYD</option>
+                <option>SID OAE DISTRICT MODEL HOSPITAL PEROORKADA</option>
+                <option>SID OAE DH KANNUR</option>
+                <option>SID OAE THQH PARASALA</option>
+              </optgroup>
+              <optgroup label="MCRC">
+                <option>MCRC CHACHAJI KALLAR</option>
+                <option>MCRC MAHATMA MBSS PULLUR-PERIYA GP</option>
+                <option>MCRC BADIYADUKA</option>
+                <option>MCRC BELLUR</option>
+                <option>MCRC KUMBADAJE</option>
+                <option>MCRC Panathady</option>
+                <option>MCRC Santhwana Enmakaje</option>
+                <option>MCRC Sneha Karadka</option>
+                <option>MCRC Snehatheeram Kayyur Cheemeni</option>
+                <option>MCRC Thanal Muliyar</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="icon">📡</div>GPS ലൊക്കേഷൻ</div>
+        <div class="location-box">
+          <div class="location-status" id="locationStatus">📍 നിങ്ങളുടെ ലൊക്കേഷൻ ലഭിക്കാൻ ബട്ടൺ അമർത്തുക</div>
+          <button type="button" class="btn btn-location" onclick="getLocation('update')">🎯 എന്റെ ലൊക്കേഷൻ നൽകുക</button>
+          <div class="location-coords" id="coordsDisplay" style="display:none">
+            <div><label>Latitude</label><input type="text" id="latitude" readonly placeholder="8.4927"></div>
+            <div><label>Longitude</label><input type="text" id="longitude" readonly placeholder="76.9697"></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <button type="button" class="btn btn-map" onclick="openMaps('update')" id="mapBtn" style="display:none">🗺️ Maps-ൽ Verify ചെയ്യുക</button>
+      </div>
+
+      <button type="submit" class="btn btn-submit">✅ ഡാറ്റ സബ്മിറ്റ് ചെയ്യുക</button>
+    </form>
+  </div>
+
+  <!-- TAB 2: New Office -->
+  <div class="tab-panel" id="panel-new">
+    <div class="info-badge">ℹ️ പുതിയ ഓഫീസ് ചേർക്കാൻ ഈ ഫോം പൂർണ്ണമായി പൂരിപ്പിക്കുക.</div>
+
+    <form id="newOfficeForm">
+      <div class="card">
+        <div class="card-title"><div class="icon">👤</div>വ്യക്തിഗത വിവരങ്ങൾ</div>
+        <div class="form-group">
+          <label class="required">പേര് (Name)</label>
+          <input type="text" id="personName" placeholder="പൂർണ്ണ പേര് നൽകുക" required>
+        </div>
+        <div class="form-group">
+          <label class="required">ഡെസിഗ്നേഷൻ (Designation)</label>
+          <input type="text" id="designation" placeholder="ഉദ്യോഗ നാമം" required>
+        </div>
+        <div class="form-group">
+          <label class="required">മൊബൈൽ നമ്പർ (Mobile)</label>
+          <input type="tel" id="mobile" placeholder="10-അക്ക നമ്പർ" pattern="[0-9]{10}" maxlength="10" required>
+        </div>
+        <div class="form-group">
+          <label class="required">പ്രൊജക്റ്റ് (Project Name)</label>
+          <input type="text" id="projectName" placeholder="പ്രൊജക്റ്റ് പേര്" required>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="icon">🏢</div>ഓഫീസ് വിവരങ്ങൾ</div>
+        <div class="form-group">
+          <label class="required">ഓഫീസ് പേര് (Office Name)</label>
+          <input type="text" id="newOfficeName" placeholder="ഓഫീസ് പേര് നൽകുക" required>
+        </div>
+        <div class="form-group">
+          <label>വിലാസം (Address)</label>
+          <input type="text" id="officeAddress" placeholder="ഓഫീസ് വിലാസം (ഐഛ്ഛിക)">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="icon">📡</div>ഓഫീസ് GPS ലൊക്കേഷൻ</div>
+        <div class="location-box">
+          <div class="location-status" id="locationStatus2">📍 ഓഫീസ് ലൊക്കേഷൻ ലഭിക്കാൻ ബട്ടൺ അമർത്തുക</div>
+          <button type="button" class="btn btn-location" onclick="getLocation('new')">🎯 ഓഫീസ് ലൊക്കേഷൻ നൽകുക</button>
+          <div class="location-coords" id="coordsDisplay2" style="display:none">
+            <div><label>Latitude</label><input type="text" id="latitude2" readonly placeholder="8.4927"></div>
+            <div><label>Longitude</label><input type="text" id="longitude2" readonly placeholder="76.9697"></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <button type="button" class="btn btn-map" onclick="openMaps('new')" id="mapBtn2" style="display:none">🗺️ Maps-ൽ Verify ചെയ്യുക</button>
+      </div>
+
+      <button type="submit" class="btn btn-submit">✅ പുതിയ ഓഫീസ് സബ്മിറ്റ് ചെയ്യുക</button>
+    </form>
+  </div>
+
+</div>
+
+<div class="footer">Office Location Data System &copy; 2025 &nbsp;|&nbsp; GPS Enabled</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">ഡാറ്റ അയക്കുന്നു...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  // =====================================================
+  //  STEP 1: Replace with your Google Apps Script URL
+  //  after deploying (see setup instructions)
+  // =====================================================
+  const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+  // =====================================================
+
+  let coords  = { lat: null, lng: null };
+  let coords2 = { lat: null, lng: null };
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  function getLocation(form) {
+    const isUpdate = form === 'update';
+    const statusEl   = document.getElementById(isUpdate ? 'locationStatus'  : 'locationStatus2');
+    const coordsEl   = document.getElementById(isUpdate ? 'coordsDisplay'   : 'coordsDisplay2');
+    const mapBtn     = document.getElementById(isUpdate ? 'mapBtn'           : 'mapBtn2');
+    const latEl      = document.getElementById(isUpdate ? 'latitude'         : 'latitude2');
+    const lngEl      = document.getElementById(isUpdate ? 'longitude'        : 'longitude2');
+
+    if (!navigator.geolocation) {
+      statusEl.textContent = '❌ ഈ ബ്രൗസർ GPS സപ്പോർട്ട് ചെയ്യുന്നില്ല';
+      statusEl.className = 'location-status error'; return;
+    }
+
+    statusEl.textContent = '⏳ ലൊക്കേഷൻ ലഭിക്കുന്നു...';
+    statusEl.className = 'location-status pulsing';
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        if (isUpdate) { coords.lat = lat; coords.lng = lng; }
+        else { coords2.lat = lat; coords2.lng = lng; }
+        latEl.value = lat; lngEl.value = lng;
+        coordsEl.style.display = 'grid';
+        mapBtn.style.display = 'flex';
+        statusEl.textContent = '✅ ലൊക്കേഷൻ ലഭിച്ചു! (Accuracy: ±' + Math.round(pos.coords.accuracy) + 'm)';
+        statusEl.className = 'location-status success';
+      },
+      (err) => {
+        let msg = '❌ ';
+        if (err.code === 1) msg += 'Location permission denied — Settings > Location enable ചെയ്യുക.';
+        else if (err.code === 2) msg += 'GPS signal ലഭിക്കുന്നില്ല. Retry ചെയ്യുക.';
+        else msg += 'ലൊക്കേഷൻ ലഭിക്കുന്നില്ല. Retry ചെയ്യുക.';
+        statusEl.textContent = msg;
+        statusEl.className = 'location-status error';
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
+
+  function openMaps(form) {
+    const c = form === 'update' ? coords : coords2;
+    if (!c.lat) return;
+    window.open('https://maps.google.com/?q=' + c.lat + ',' + c.lng, '_blank');
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + type + ' show';
+    setTimeout(() => { t.className = 'toast'; }, 3500);
+  }
+
+  function setLoading(show, text = 'ഡാറ്റ അയക്കുന്നു...') {
+    document.getElementById('loadingText').textContent = text;
+    document.getElementById('loadingOverlay').classList.toggle('show', show);
+  }
+
+  async function sendData(payload) {
+    await fetch(SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  // Form 1 — Update existing office location
+  document.getElementById('updateForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const office = document.getElementById('officeName').value;
+    if (!office) { showToast('⚠️ ഓഫീസ് തിരഞ്ഞെടുക്കുക', 'error'); return; }
+    if (!coords.lat) { showToast('⚠️ ആദ്യം GPS ലൊക്കേഷൻ ലഭ്യമാക്കുക', 'error'); return; }
+    setLoading(true);
+    try {
+      await sendData({
+        sheet: 'LocationUpdates',
+        timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        officeName: office,
+        latitude: coords.lat, longitude: coords.lng,
+        mapsLink: 'https://maps.google.com/?q=' + coords.lat + ',' + coords.lng
+      });
+      setLoading(false);
+      showToast('✅ ഡാറ്റ വിജയകരമായി സബ്മിറ്റ് ചെയ്തു!', 'success');
+      this.reset(); coords = { lat: null, lng: null };
+      document.getElementById('coordsDisplay').style.display = 'none';
+      document.getElementById('mapBtn').style.display = 'none';
+      document.getElementById('locationStatus').textContent = '📍 നിങ്ങളുടെ ലൊക്കേഷൻ ലഭിക്കാൻ ബട്ടൺ അമർത്തുക';
+      document.getElementById('locationStatus').className = 'location-status';
+    } catch(err) { setLoading(false); showToast('❌ Error. Retry ചെയ്യുക.', 'error'); }
+  });
+
+  // Form 2 — New office
+  document.getElementById('newOfficeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!coords2.lat) { showToast('⚠️ ആദ്യം GPS ലൊക്കേഷൻ ലഭ്യമാക്കുക', 'error'); return; }
+    setLoading(true, 'പുതിയ ഓഫീസ് ചേർക്കുന്നു...');
+    try {
+      await sendData({
+        sheet: 'NewOffices',
+        timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        personName: document.getElementById('personName').value,
+        designation: document.getElementById('designation').value,
+        mobile: document.getElementById('mobile').value,
+        projectName: document.getElementById('projectName').value,
+        officeName: document.getElementById('newOfficeName').value,
+        address: document.getElementById('officeAddress').value,
+        latitude: coords2.lat, longitude: coords2.lng,
+        mapsLink: 'https://maps.google.com/?q=' + coords2.lat + ',' + coords2.lng
+      });
+      setLoading(false);
+      showToast('✅ പുതിയ ഓഫീസ് വിജയകരമായി ചേർത്തു!', 'success');
+      this.reset(); coords2 = { lat: null, lng: null };
+      document.getElementById('coordsDisplay2').style.display = 'none';
+      document.getElementById('mapBtn2').style.display = 'none';
+      document.getElementById('locationStatus2').textContent = '📍 ഓഫീസ് ലൊക്കേഷൻ ലഭിക്കാൻ ബട്ടൺ അമർത്തുക';
+      document.getElementById('locationStatus2').className = 'location-status';
+    } catch(err) { setLoading(false); showToast('❌ Error. Retry ചെയ്യുക.', 'error'); }
+  });
+</script>
+</body>
+</html>
